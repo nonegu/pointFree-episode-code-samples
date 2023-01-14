@@ -62,7 +62,6 @@ struct CounterView: View {
 
 import PlaygroundSupport
 
-PlaygroundPage.current.liveView = UIHostingController(
-  rootView: ContentView(state: AppState())
-//  rootView: CounterView()
-)
+let rootView = ContentView(state: AppState())
+    .frame(width: 375, height: 667)
+PlaygroundPage.current.setLiveView(rootView)
