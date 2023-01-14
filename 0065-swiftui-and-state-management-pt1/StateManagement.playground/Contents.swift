@@ -29,8 +29,30 @@ private func ordinal(_ n: Int) -> String {
 
 import Combine
 
-class AppState: ObservableObject {
-  @Published var count = 0
+class AppState: Codable, ObservableObject {
+    @Published var count = 0 {
+        didSet {
+            guard let jsonData = try? JSONEncoder().encode(self) else { return }
+            UserDefaults.standard.set(jsonData, forKey: AppState.source)
+        }
+    }
+    static var source = "AppState"
+    
+    enum CodingKeys: String, CodingKey {
+        case count
+    }
+    
+    init() {}
+    
+    required init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        count = try values.decode(Int.self, forKey: .count)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(count, forKey: .count)
+    }
 }
 
 struct CounterView: View {
@@ -62,6 +84,14 @@ struct CounterView: View {
 
 import PlaygroundSupport
 
-let rootView = ContentView(state: AppState())
+let appState: AppState
+if let appStateData = UserDefaults.standard.data(forKey: AppState.source),
+    let savedState = try? JSONDecoder().decode(AppState.self, from: appStateData) {
+    appState = savedState
+} else {
+    appState = AppState()
+}
+
+let rootView = ContentView(state: appState)
     .frame(width: 375, height: 667)
 PlaygroundPage.current.setLiveView(rootView)
